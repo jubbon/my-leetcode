@@ -1,55 +1,78 @@
 from typing import List
-from collections import Counter
-from itertools import combinations
 
 
 class Solution:
     def threeSum(self, nums: List[int]) -> List[List[int]]:
-        '''
-        '''
-        sorted_nums = sorted(nums)
-        counter = Counter(sorted_nums)
-        uniq_nums = list()
-        for num, count in counter.items():
-            if count == 1:
-                uniq_nums.append(num)
-            else:
-                uniq_nums.extend([num]*2)
+        """
+        Find all unique triplets in the array which gives the sum of zero.
 
-        sums = dict()
-        for p0, p1 in combinations(uniq_nums, r=2):
-            pair_sum = p0 + p1
-            if -10**5 <= pair_sum <= 10**5:
-                sums.setdefault(pair_sum, set()).add((p0, p1))
+        Args:
+            nums: List of integers
 
-        data = set()
-        last_num = None
-        for first_num in sorted_nums:
-            if last_num and first_num == last_num:
+        Returns:
+            List of unique triplets that sum to zero
+
+        Time Complexity: O(n²)
+        Space Complexity: O(1) (not counting the result)
+        """
+        result = []
+        nums.sort()  # Sort the array to handle duplicates and use two pointers
+
+        for i in range(len(nums) - 2):
+            # Skip duplicates for the first number
+            if i > 0 and nums[i] == nums[i - 1]:
                 continue
-            for p0, p1 in sums.get(-1 * first_num, []):
-                if p0 == first_num and counter[first_num] <= 1:
-                    continue
-                if p1 == first_num and counter[first_num] <= 1:
-                    continue
-                if p0 == p1 == first_num and counter[first_num] <= 2:
-                    continue
-                data.add(tuple(sorted([first_num, p0, p1])))
-            last_num = first_num
 
-        return [list(d) for d in data]
+            # Skip if the first number is positive (as array is sorted)
+            if nums[i] > 0:
+                break
+
+            left, right = i + 1, len(nums) - 1
+            while left < right:
+                current_sum = nums[i] + nums[left] + nums[right]
+                if current_sum < 0:
+                    left += 1
+                elif current_sum > 0:
+                    right -= 1
+                else:
+                    # Found a valid triplet
+                    result.append([nums[i], nums[left], nums[right]])
+                    # Skip duplicates for the second number
+                    while left < right and nums[left] == nums[left + 1]:
+                        left += 1
+                    # Skip duplicates for the third number
+                    while left < right and nums[right] == nums[right - 1]:
+                        right -= 1
+                    left += 1
+                    right -= 1
+        return result
 
 
 def test_solution(input: List[int], output: List[List[int]]):
+    """
+    Test the solution with given input and expected output.
+    """
     result = Solution().threeSum(input)
-    assert len(result) == len(output), f"{result}"
-    for o in output:
-        assert o in result, f"{result}"
+    # Sort both result and output for comparison
+    result = sorted([sorted(triplet) for triplet in result])
+    output = sorted([sorted(triplet) for triplet in output])
+    assert result == output, f"Expected {output}, got {result}"
 
 
 if __name__ == "__main__":
+    # Basic test cases
     test_solution([-1,0,1,2,-1,-4], [[-1,-1,2], [-1,0,1]])
     test_solution([0,1,1], [])
     test_solution([0,0,0], [[0,0,0]])
     test_solution([1,2,-2,-1], [])
     test_solution([-1,0,1,0], [[-1,0,1]])
+
+    # Additional test cases
+    test_solution([], [])
+    test_solution([0], [])
+    test_solution([0,0], [])
+    test_solution([-2,0,1,1,2], [[-2,0,2], [-2,1,1]])
+    test_solution([-1,0,1,2,-1,-4,-2,-3,3,0,4],
+                 [[-4,0,4],[-4,1,3],[-3,-1,4],[-3,0,3],[-3,1,2],[-2,-1,3],[-2,0,2],[-1,-1,2],[-1,0,1]])
+
+    print("All tests passed!")
